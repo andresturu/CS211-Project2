@@ -135,18 +135,18 @@ int main(int argc, char* argv[])
         return 0;
       }
 
-      STMT* program = programgraph_build(tokens);
+       struct STMT* program = programgraph_build(tokens);
       programgraph_print(program);
     }
     else if (cmd == "sm") 
     {
-      RAM* memory = ram_init();
+      struct RAM* memory = ram_init();
       ram_print(memory);
       ram_destroy(memory);
     }
-    else if (cmd == "")
+    else if (cmd == "w")
     {
-
+      struct STMT* cur;
     } 
     else {
       cout << "unknown command" << endl;
