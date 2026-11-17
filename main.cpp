@@ -135,8 +135,11 @@ int main(int argc, char* argv[])
         return 0;
       }
 
-       struct STMT* program = programgraph_build(tokens);
+      struct STMT* program = programgraph_build(tokens);
       programgraph_print(program);
+
+      tokenqueue_destroy(tokens);
+      programgraph_destroy(program);
     }
     else if (cmd == "sm") 
     {
