@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include <string>
+#include <set>
 
 using std::cin;
 using std::cout;
@@ -23,6 +24,7 @@ using std::endl;
 using std::string;
 using std::getline;
 using std::stoi;
+using std::set;
 
 #include "pgutil.h"
 
@@ -108,6 +110,7 @@ int main(int argc, char* argv[])
   // command loop:
   //
   string cmd;
+  set<int> breaks;
 
   while (true) {
 
@@ -146,6 +149,22 @@ int main(int argc, char* argv[])
       struct RAM* memory = ram_init();
       ram_print(memory);
       ram_destroy(memory);
+    }
+    else if (cmd == "b") 
+    {
+      cout << "it works!";
+    }
+    else if (cmd == "rb")
+    {
+      cout << "it works rb!";
+    }
+    else if (cmd == "cb")
+    {
+      cout << "it works cb!";
+    }
+    else if (cmd == "lb")
+    {
+      cout << "it works lb!";
     }
     else if (cmd == "w")
     {
