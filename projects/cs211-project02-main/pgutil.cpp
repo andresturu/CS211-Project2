@@ -45,12 +45,43 @@ struct PG_LINKS break_pg(struct STMT* cur)
   links.true_path = nullptr;
   links.false_path = nullptr;
 
+  switch(cur->stmt_type) {
+    case 0:
+      links.next=cur->types.assignment->next_stmt;
+      cur->types.assignment->next_stmt=nullptr;
+      break;
+    case 1:
+      links.next=cur->types.function_call->next_stmt;
+      cur->types.function_call->next_stmt=nullptr;
+      break;
+    case 2:
+      links.true_path=cur->types.if_then_else->true_path;
+      links.false_path=cur->types.if_then_else->false_path;
+      links.next=cur->types.if_then_else->next_stmt;
+      cur->types.if_then_else->next_stmt=nullptr;
+      cur->types.if_then_else->false_path=nullptr;
+      cur->types.if_then_else->true_path=nullptr;
+      break;
+  
+    case 3:
+      links.next=cur->types.while_loop->next_stmt;
+      links.loop_body=cur->types.while_loop->loop_body;
+      cur->types.while_loop->next_stmt=nullptr;
+      cur->types.while_loop->loop_body=nullptr;
+      break;
+    case 4:
+    
+      links.next=cur->types.pass->next_stmt;
+      cur->types.pass->next_stmt=nullptr;
+      break;
+  }
   //
   // TODO:
   //
   
   return links;
 }
+
 
 
 /**
@@ -73,6 +104,27 @@ struct PG_LINKS break_pg(struct STMT* cur)
  */
 void repair_pg(struct STMT* cur, struct PG_LINKS links)
 {
+   switch(cur->stmt_type) {
+    case 0:
+      cur->types.assignment->next_stmt=links.next;
+      break;
+    case 1:
+      cur->types.function_call->next_stmt=links.next;
+      break;
+    case 2:
+      cur->types.if_then_else->next_stmt=links.next;
+      cur->types.if_then_else->false_path=links.false_path;
+      cur->types.if_then_else->true_path=links.true_path;
+      break;
+  
+    case 3:
+      cur->types.while_loop->next_stmt=links.next;
+      cur->types.while_loop->loop_body=links.loop_body;
+      break;
+    case 4:
+      cur->types.pass->next_stmt=links.next;
+      break;
+  }
   //
   // TODO:
   //
