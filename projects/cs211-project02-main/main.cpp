@@ -133,6 +133,8 @@ int step(STMT*& cur, RAM* memory, map<int, int>& breakpoints){
       cout<<"breakpoint hit at line "<<cur->line<<endl;
       breakpoints[cur->line]=1;
       return 1;
+    } else {
+      breakpoints[cur->line]=0;
     }
   }
   struct PG_LINKS placeholder=break_pg(cur);
