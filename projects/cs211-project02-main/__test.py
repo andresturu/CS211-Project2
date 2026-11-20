@@ -1,2 +1,6 @@
-print("hello guys what's up")
-y = 1
+i = 0
+while i < 5:
+{
+  i = i + 1
+}
+y = 2

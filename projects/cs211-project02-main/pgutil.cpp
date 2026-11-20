@@ -249,7 +249,7 @@ TEST(break_repair_pg, pass)
   cout << "**passed!" << endl;
 }  
 
-//test that break works on while loop
+//test that break works on function_call type
 TEST(break_repair_pg, function_call) {
   cout << "**starting" << endl;
 
@@ -303,17 +303,28 @@ TEST(break_repair_pg, function_call) {
 
 
 
-//test that break works on function_call
-TEST(break_repair_pg, function_call) {
+//test that break works on while_loop type
+TEST(break_repair_pg, while_loop) {
   cout << "**starting" << endl;
 
   FILE* file;
   char* filename = "__test.py";
 
-  //writes python program in a new file
+  //write a for loop in "python" to test
+  /*
+    i = 0
+    while i < 5:
+      i+=1
+    y = 2
+  */
+
   file = fopen(filename, "w");
-  fprintf(file, "print(\"hello guys what's up\")\n");
-  fprintf(file, "y = 1\n");
+  fprintf(file, "i = 0\n");
+  fprintf(file, "while i < 5:\n");
+  fprintf(file, "{\n");
+  fprintf(file, "  i = i + 1\n");
+  fprintf(file, "}\n");
+  fprintf(file, "y = 2\n");
   fclose(file);
 
   //has NUPython read from the newly created file
@@ -321,30 +332,38 @@ TEST(break_repair_pg, function_call) {
   struct TokenQueue* tokens = parser_parse(file);
   struct STMT* program = programgraph_build(tokens);
   fclose(file);
+
+  //get the stmt where while loop starts
+  struct STMT* loop = program->types.assignment->next_stmt;
   
   //finds the next STMT that the function call points to
-  struct STMT* stmt2 = program->types.function_call->next_stmt;
+  struct STMT* next_stmt = loop->types.while_loop->next_stmt;
+  struct STMT* loop_body = loop->types.while_loop->loop_body;
 
     // okay let's break PG at the first stmt:
   //
   cout << "**breaking..." << endl;
 
   //links is a struct that contains pointer to next stmt
-  struct PG_LINKS links = break_pg(program);
+  struct PG_LINKS links = break_pg(loop);
 
   //should be nullptr after being broken
-  ASSERT_EQ(program->types.function_call->next_stmt, nullptr);
+  ASSERT_EQ(loop->types.while_loop->next_stmt, nullptr);
+  ASSERT_EQ(loop->types.while_loop->loop_body, nullptr);
   //links.next should hold the old next stmt
-  ASSERT_EQ(links.next, stmt2);
+  ASSERT_EQ(links.next, next_stmt);
+  ASSERT_EQ(links.loop_body, loop_body);
 
   //
   // now let's repair it:
   //
   cout << "**repairing..." << endl;
 
-  repair_pg(program, links);
+  repair_pg(loop, links);
 
-  ASSERT_EQ(program->types.function_call->next_stmt, stmt2);
+  //after repairing, both of the links should be back to normal
+  ASSERT_EQ(loop->types.while_loop->next_stmt, next_stmt);
+  ASSERT_EQ(loop->types.while_loop->loop_body, loop_body);
 
   //
   // done!
@@ -354,6 +373,8 @@ TEST(break_repair_pg, function_call) {
 
   cout << "**passed!" << endl;
 }
+
+
 
 //////////////////////////////////////////////////////////////////////////
 // 
