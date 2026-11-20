@@ -249,6 +249,111 @@ TEST(break_repair_pg, pass)
   cout << "**passed!" << endl;
 }  
 
+//test that break works on while loop
+TEST(break_repair_pg, function_call) {
+  cout << "**starting" << endl;
+
+  FILE* file;
+  char* filename = "__test.py";
+
+  //writes python program in a new file
+  file = fopen(filename, "w");
+  fprintf(file, "print(\"hello guys what's up\")\n");
+  fprintf(file, "y = 1\n");
+  fclose(file);
+
+  //has NUPython read from the newly created file
+  file = fopen(filename, "r");
+  struct TokenQueue* tokens = parser_parse(file);
+  struct STMT* program = programgraph_build(tokens);
+  fclose(file);
+  
+  //finds the next STMT that the function call points to
+  struct STMT* stmt2 = program->types.function_call->next_stmt;
+
+    // okay let's break PG at the first stmt:
+  //
+  cout << "**breaking..." << endl;
+
+  //links is a struct that contains pointer to next stmt
+  struct PG_LINKS links = break_pg(program);
+
+  //should be nullptr after being broken
+  ASSERT_EQ(program->types.function_call->next_stmt, nullptr);
+  //links.next should hold the old next stmt
+  ASSERT_EQ(links.next, stmt2);
+
+  //
+  // now let's repair it:
+  //
+  cout << "**repairing..." << endl;
+
+  repair_pg(program, links);
+
+  ASSERT_EQ(program->types.function_call->next_stmt, stmt2);
+
+  //
+  // done!
+  //
+  tokenqueue_destroy(tokens);
+  programgraph_destroy(program);
+
+  cout << "**passed!" << endl;
+}
+
+
+
+//test that break works on function_call
+TEST(break_repair_pg, function_call) {
+  cout << "**starting" << endl;
+
+  FILE* file;
+  char* filename = "__test.py";
+
+  //writes python program in a new file
+  file = fopen(filename, "w");
+  fprintf(file, "print(\"hello guys what's up\")\n");
+  fprintf(file, "y = 1\n");
+  fclose(file);
+
+  //has NUPython read from the newly created file
+  file = fopen(filename, "r");
+  struct TokenQueue* tokens = parser_parse(file);
+  struct STMT* program = programgraph_build(tokens);
+  fclose(file);
+  
+  //finds the next STMT that the function call points to
+  struct STMT* stmt2 = program->types.function_call->next_stmt;
+
+    // okay let's break PG at the first stmt:
+  //
+  cout << "**breaking..." << endl;
+
+  //links is a struct that contains pointer to next stmt
+  struct PG_LINKS links = break_pg(program);
+
+  //should be nullptr after being broken
+  ASSERT_EQ(program->types.function_call->next_stmt, nullptr);
+  //links.next should hold the old next stmt
+  ASSERT_EQ(links.next, stmt2);
+
+  //
+  // now let's repair it:
+  //
+  cout << "**repairing..." << endl;
+
+  repair_pg(program, links);
+
+  ASSERT_EQ(program->types.function_call->next_stmt, stmt2);
+
+  //
+  // done!
+  //
+  tokenqueue_destroy(tokens);
+  programgraph_destroy(program);
+
+  cout << "**passed!" << endl;
+}
 
 //////////////////////////////////////////////////////////////////////////
 // 

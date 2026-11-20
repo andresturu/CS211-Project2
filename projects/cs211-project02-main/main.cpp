@@ -94,7 +94,7 @@ cout<<"breakpoint removed"<<endl;
 }
 void clearbp(map<int, int>& breakpoints){
   breakpoints.clear();
-  cout<<"all breakpoints removed";
+  cout<<"all breakpoints removed\n";
 }
 void listbp(map<int, int>& breakpoints){
   if(breakpoints.size()==0){
