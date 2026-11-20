@@ -165,14 +165,14 @@ int step(STMT*& cur, RAM* memory, map<int, int>& breakpoints){
     else return 1;
   }
   if(cur==nullptr){
-    cout<<"execution has completed"<<endl;
+    cout<<"program completed"<<endl;
     return 1;
   }
   return 0;
 }
 void run(STMT*& cur, RAM* memory, map<int, int>& breakpoints){
   if(cur==nullptr){
-    cout<<"execution completed"<<endl;
+    cout<<"execution has completed"<<endl;
     return;
   }
   int cont=0;
@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
 
     return 0;
   }
- static struct TokenQueue* tokens = parser_parse(input);
+ struct TokenQueue* tokens = parser_parse(input);
 
 if (tokens == NULL)
 {
@@ -298,6 +298,8 @@ RAM* memory = ram_init();
   cout << endl;
   cout << "** Done **" << endl;
 
+  programgraph_destroy(program);
+  tokenqueue_destroy(tokens);
   fclose(input);
   ram_destroy(memory);
   return 0;
