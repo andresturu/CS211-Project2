@@ -102,9 +102,9 @@ void listbp(map<int, int>& breakpoints){
     return;
   }
   bool first=true;
-  cout<<"breakpoints:";
+  cout<<"breakpoints: ";
   for(const std::pair<const int, int>& i: breakpoints){
-    if(!first) cout<<",";
+    if(!first) cout<<", ";
     cout<<i.first;
     first=false;
   }
