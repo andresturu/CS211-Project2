@@ -374,6 +374,85 @@ TEST(break_repair_pg, while_loop) {
   cout << "**passed!" << endl;
 }
 
+//test that break works on if_then_else
+//test that break works on if/else
+TEST(break_repair_pg, if_then_else) {
+  cout << "**starting" << endl;
+
+  FILE* file;
+  char* filename = "__test.py";
+
+  //writes nuPython program in a new file
+
+  /*
+  x = 3
+  if x<5:
+    y = 1
+  else:
+    y = 2
+  z = 3
+  */
+  //input a program into new file
+  file = fopen(filename, "w");
+  fprintf(file, "x = 3\n");
+  fprintf(file, "if x < 5:\n");
+  fprintf(file, "{\n");
+  fprintf(file, "  y = 1\n");
+  fprintf(file, "}\n");
+  fprintf(file, "else:\n");
+  fprintf(file, "{\n");
+  fprintf(file, "  y = 2\n");
+  fprintf(file, "}\n");
+  fprintf(file, "z = 3\n");
+  fclose(file);
+
+  //has nuPython read from the newly created file
+  file = fopen(filename, "r");
+  struct TokenQueue* tokens = parser_parse(file);
+  struct STMT* program = programgraph_build(tokens);
+  fclose(file);
+
+  //skip past first stmt to go to the actual start of the if stmt
+  struct STMT* ifstmt = program->types.assignment->next_stmt;
+  ASSERT_EQ(ifstmt->stmt_type, STMT_IF_THEN_ELSE);
+
+  //if then else has 3 paths to keep track of
+  struct STMT* true_path  = ifstmt->types.if_then_else->true_path;
+  struct STMT* false_path = ifstmt->types.if_then_else->false_path;
+  struct STMT* next_stmt  = ifstmt->types.if_then_else->next_stmt;
+
+  cout << "**breaking..." << endl;
+
+  // storing the broken pointers to STMTs here
+  struct PG_LINKS links = break_pg(ifstmt);
+
+  //should be nullptr after being broken now
+  ASSERT_EQ(ifstmt->types.if_then_else->true_path, nullptr);
+  ASSERT_EQ(ifstmt->types.if_then_else->false_path, nullptr);
+  ASSERT_EQ(ifstmt->types.if_then_else->next_stmt, nullptr);
+  //links structure wshould hold the prvious links
+  ASSERT_EQ(links.true_path, true_path);
+  ASSERT_EQ(links.false_path, false_path);
+  ASSERT_EQ(links.next, next_stmt);
+
+  //x = 3 should still point to the if/else
+  ASSERT_EQ(program->types.assignment->next_stmt, ifstmt);
+
+  // now let's repair it:
+  cout << "**repairing..." << endl;
+
+  repair_pg(ifstmt, links);
+
+
+  ASSERT_EQ(ifstmt->types.if_then_else->true_path, true_path);
+  ASSERT_EQ(ifstmt->types.if_then_else->false_path, false_path);
+  ASSERT_EQ(ifstmt->types.if_then_else->next_stmt, next_stmt);
+
+  tokenqueue_destroy(tokens);
+  programgraph_destroy(program);
+
+  cout << "**passed!" << endl;
+}
 
 
 //////////////////////////////////////////////////////////////////////////
