@@ -75,34 +75,46 @@ void help_command()
   * @param argv Array of actual arguments
   * @return 0 Success
   */
+
+//sets a breakpoint at the newpt line
 void breakpt(map<int, int>& breakpoints, int newpt){
   if(breakpoints.contains(newpt)==true){
+    //if the point exists, display that it already exists
     cout<<"breakpoint exists"<<endl;
-  }
-  else{
+  }else {
+    //if point doesn't exist, set a key at the point with an arbitrary value of 0
     breakpoints[newpt]=0;
     cout<<"breakpoint set"<<endl;
   }
 }
+//removes breakpoint at the deletept line
 void removebp(map<int, int>& breakpoints, int deletept){
   if(!breakpoints.contains(deletept)){
-cout<<"no such breakpoint"<<endl;
-}else{
-breakpoints.erase(deletept);
-cout<<"breakpoint removed"<<endl;
+    //if point doesn't exist, displays that it doesn't exist
+    cout<<"no such breakpoint"<<endl;
+  } else {
+    //if point exists, erases the key at deletept
+    breakpoints.erase(deletept);
+    cout<<"breakpoint removed"<<endl;
+  }
 }
-}
+//clears all breakpoints
 void clearbp(map<int, int>& breakpoints){
+  //clears all keys in the breakpoints map vector
   breakpoints.clear();
   cout<<"all breakpoints removed\n";
 }
+//lists all the breakpoints
 void listbp(map<int, int>& breakpoints){
   if(breakpoints.size()==0){
+    //if there are no breakpoints, display no breakpoints and leave function
     cout<<"breakpoints: none"<<endl;
     return;
   }
+  //sets commas in between breakpoints
   bool first=true;
   cout<<"breakpoints: ";
+  //displays every single breakpoint in the map breakpoints
   for(const std::pair<const int, int>& i: breakpoints){
     if(!first) cout<<", ";
     cout<<i.first;
@@ -110,18 +122,23 @@ void listbp(map<int, int>& breakpoints){
   }
   cout<<endl;
 }
+//checks where the current line is stopped at
 void where(STMT* cur){
+  //if there is no pointer, that means the execution has completed
   if(cur==nullptr){
     cout<<"execution has completed"<<endl;
     return;
   }
- struct PG_LINKS placeholder=break_pg(cur);
+  //breaks the programgraph at the current line it's pointed to
+  struct PG_LINKS placeholder=break_pg(cur);
+  //prints the broken programgraph
   programgraph_print(cur);
+  //repairs the graph again
   repair_pg(cur, placeholder);
 }
 
 
-
+//
 int step(STMT*& cur, RAM* memory, map<int, int>& breakpoints){
   if(cur==nullptr){
     cout<<"execution has completed"<<endl;
@@ -141,30 +158,33 @@ int step(STMT*& cur, RAM* memory, map<int, int>& breakpoints){
   if(cur->stmt_type==STMT_IF_THEN_ELSE){
     struct RAM_VALUE* result=execute_expr(cur, memory, cur->types.if_then_else->condition);
     repair_pg(cur, placeholder);
-    if(result==nullptr)return 1;
+    if(result==nullptr)
+      return 1;
     if(result->types.i==0){
       cur=placeholder.false_path;
-    }else{
+    } else {
       cur=placeholder.true_path;
     }
     ram_free_value(result);
-  }else if(cur->stmt_type==STMT_WHILE_LOOP){
+  } else if(cur->stmt_type==STMT_WHILE_LOOP){
     struct RAM_VALUE* result=execute_expr(cur, memory, cur->types.while_loop->condition);
     repair_pg(cur, placeholder);
-    if(result==nullptr)return 1;
+    if(result==nullptr)
+      return 1;
     if(result->types.i==0){
       cur=placeholder.next;
-    }else{
+    } else {
       cur=placeholder.loop_body;
     }
     ram_free_value(result);
-  }else{
+  } else {
     struct ExecuteResult result=execute(cur, memory);
     repair_pg(cur, placeholder);
     if(result.Success){
       cur=placeholder.next;
     }
-    else return 1;
+    else 
+      return 1;
   }
   if(cur==nullptr){
     cout<<"program completed"<<endl;
@@ -178,7 +198,8 @@ void run(STMT*& cur, RAM* memory, map<int, int>& breakpoints){
     return;
   }
   int cont=0;
-  while(cont==0) cont=step(cur, memory, breakpoints);
+  while(cont==0) 
+    cont=step(cur, memory, breakpoints);
 }
 
 int main(int argc, char* argv[])
@@ -211,20 +232,19 @@ int main(int argc, char* argv[])
 
     return 0;
   }
- struct TokenQueue* tokens = parser_parse(input);
+  struct TokenQueue* tokens = parser_parse(input);
 
-if (tokens == NULL)
-{
-printf("**parsing failed...\n");
-fclose(input);
-return 0;
-}
+  if (tokens == NULL) {
+    printf("**parsing failed...\n");
+    fclose(input);
+    return 0;
+  }
 
-STMT* program = programgraph_build(tokens);
-STMT* cur = program;
+  STMT* program = programgraph_build(tokens);
+  STMT* cur = program;
 
 
-RAM* memory = ram_init();
+  RAM* memory = ram_init();
 
   // command loop:
   //
@@ -242,49 +262,79 @@ RAM* memory = ram_init();
       //
       break;
     }
-    else if (cmd == "h") { 
+    else if (cmd == "h") {
+      //
+      // help:
+      // 
       help_command();
     }
     else if (cmd == "pg") 
     {
+      //
+      // print programgraph:
+      // 
       programgraph_print(program);
     }
     else if (cmd == "sm") 
     {
+      //
+      // show memory content:
+      // 
       ram_print(memory);
     }
     else if (cmd == "b")
     {
+      //
+      // set breakpoints:
+      // 
       int key;
       cin>>key;
       breakpt(breakpoints, key); 
     } 
     else if (cmd == "rb")
     {
-     int key;
-        cin>>key;
-        removebp(breakpoints, key); 
+      //
+      // remove breakpoints:
+      // 
+      int key;
+      cin>>key;
+      removebp(breakpoints, key); 
     } 
-   else if (cmd == "cb")
+    else if (cmd == "cb")
     {
-       clearbp(breakpoints); 
+      //
+      // clear breakpoints:
+      // 
+      clearbp(breakpoints); 
     } 
     else if (cmd == "lb")
     {
+      //
+      // list breakpoints:
+      // 
       listbp(breakpoints);
     } 
      else if (cmd == "w")
     {
+      //
+      // where:
+      // 
       where(cur);
     } 
     else if (cmd == "s")
     {
-       string b;
+      //
+      // steps to next line:
+      // 
+      string b;
       std::getline(cin, b);
       int i=step(cur, memory, breakpoints);
     } 
     else if(cmd=="r"){
-       string b;
+      //
+      // runs until hits bp:
+      // 
+      string b;
       std::getline(cin, b);
       run(cur, memory, breakpoints);
     }
