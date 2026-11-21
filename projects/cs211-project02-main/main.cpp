@@ -138,13 +138,14 @@ void where(STMT* cur){
 }
 
 
-//
+//go to the next line of code in the python script
 int step(STMT*& cur, RAM* memory, map<int, int>& breakpoints){
+  //if the current pointer points nowhere, the program is finished
   if(cur==nullptr){
     cout<<"execution has completed"<<endl;
     return 1;
   }
-  //breakpoint stuff
+  //if breakpoint is here, stop at this line, only moving on if step or run is called
   if(breakpoints.contains(cur->line)){
     if(breakpoints[cur->line]==0){
       cout<<"breakpoint hit at line "<<cur->line<<endl;
@@ -154,12 +155,17 @@ int step(STMT*& cur, RAM* memory, map<int, int>& breakpoints){
       breakpoints[cur->line]=0;
     }
   }
+
+  //sets a broken programgraph at the current line
   struct PG_LINKS placeholder=break_pg(cur);
   if(cur->stmt_type==STMT_IF_THEN_ELSE){
+    //if result is nullptr, reached a broken point in the graph, 
+    //stops (after allocating for the stmt memory)
     struct RAM_VALUE* result=execute_expr(cur, memory, cur->types.if_then_else->condition);
     repair_pg(cur, placeholder);
     if(result==nullptr)
       return 1;
+    //using the repaired graph, follow the correct path based on the condition, then free the memory
     if(result->types.i==0){
       cur=placeholder.false_path;
     } else {
@@ -167,10 +173,13 @@ int step(STMT*& cur, RAM* memory, map<int, int>& breakpoints){
     }
     ram_free_value(result);
   } else if(cur->stmt_type==STMT_WHILE_LOOP){
+    //if result is nullptr, reached a broken point in the graph, 
+    //stops stops (after allocating for the stmt memory)
     struct RAM_VALUE* result=execute_expr(cur, memory, cur->types.while_loop->condition);
     repair_pg(cur, placeholder);
     if(result==nullptr)
       return 1;
+    //using the repaired graph, follow the correct path based on the condition, then free the memory
     if(result->types.i==0){
       cur=placeholder.next;
     } else {
@@ -178,25 +187,31 @@ int step(STMT*& cur, RAM* memory, map<int, int>& breakpoints){
     }
     ram_free_value(result);
   } else {
+    //if result works, save the statement execution in memory, then go to the next step
     struct ExecuteResult result=execute(cur, memory);
     repair_pg(cur, placeholder);
     if(result.Success){
       cur=placeholder.next;
     }
     else 
+      //if result doesn't work, reached breakpoint
       return 1;
   }
+  //current reached end if nullptr
   if(cur==nullptr){
     cout<<"program completed"<<endl;
     return 1;
   }
   return 0;
 }
+//runs the entire program, only stopping at the next breakpoint
 void run(STMT*& cur, RAM* memory, map<int, int>& breakpoints){
+  //if the program reaches the end, stop the run funciton and output execution completed
   if(cur==nullptr){
     cout<<"execution has completed"<<endl;
     return;
   }
+  //keeps calling step, running through the program until a breakpoint is hit
   int cont=0;
   while(cont==0) 
     cont=step(cur, memory, breakpoints);
